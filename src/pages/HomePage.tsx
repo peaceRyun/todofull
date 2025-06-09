@@ -3,15 +3,18 @@ import { IoIosAddCircle } from 'react-icons/io';
 import { MdDelete } from 'react-icons/md';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { formatMonthDayYear, type FormattedDate } from '../utils/dateFormatter';
+import { useTodoList } from '../api/api';
 
 const wrap = 'h-screen bg-[linear-gradient(to_right,#11998e,#38ef7d)] relative';
 
 const ItemWrap =
     'w-full h-16 px-5 py-2 transition-all duration-200 hover:border-l-4 hover:bg-gray-200 flex items-center justify-between';
 
-function HomePage() {
+const HomePage = () => {
+    const { data, isLoading } = useTodoList();
+
     const [textValue, setTextValue] = useState<string>('');
-    const [checkValue, setCheckValue] = useState<boolean>(false);
+    const [checkValue, setCheckValue] = useState<{ [id: string]: boolean }>({});
 
     const todayDateFull: FormattedDate = formatMonthDayYear();
     const { year, monthName, day } = todayDateFull;
@@ -24,10 +27,14 @@ function HomePage() {
         alert(`${textValue}`);
     };
 
-    const handleCheckChange = (): void => {
-        setCheckValue(!checkValue);
+    const handleCheckChange = (id: string): void => {
+        setCheckValue((prev) => ({
+            ...prev,
+            [id]: !prev[id],
+        }));
     };
 
+    if (isLoading) return <p>로딩 중...</p>;
     return (
         <>
             <div className={`${wrap}`}>
@@ -62,33 +69,37 @@ function HomePage() {
                         </div>
                     </form>
                     <ul className='listWrap pt-2 h-[320px] overflow-auto'>
-                        <li className={`${ItemWrap}`}>
-                            <div id='check' className='block w-8 h-full'>
-                                <label htmlFor='ticked' className='cursor-pointer'>
-                                    <FaCheckCircle
-                                        className={`w-full h-full text-gray-300 hover:text-green-400 ${
-                                            checkValue ? 'text-green-400' : ''
-                                        }`}
+                        {data?.map((todo) => (
+                            <li key={todo._id} className={`${ItemWrap}`}>
+                                <div id='check' className='block w-8 h-full'>
+                                    <label htmlFor={`ticked-${todo._id}`} className='cursor-pointer'>
+                                        <FaCheckCircle
+                                            className={`w-full h-full text-gray-300 hover:text-green-400 ${
+                                                checkValue ? 'text-green-400' : ''
+                                            }`}
+                                        />
+                                    </label>
+                                    <input
+                                        type='checkbox'
+                                        id={`ticked-${todo._id}`}
+                                        checked={!!checkValue[todo._id]}
+                                        onChange={() => handleCheckChange(todo._id)}
+                                        className='sr-only'
                                     />
-                                </label>
-                                <input
-                                    type='checkbox'
-                                    id='ticked'
-                                    checked={checkValue}
-                                    onChange={handleCheckChange}
-                                    className='sr-only'
-                                />
-                            </div>
-                            <div className={`item w-full m-2.5 ${checkValue ? 'line-through' : ''}`}>할일 1</div>
-                            <button id='delete' className='block w-8 h-full'>
-                                <MdDelete className='w-full h-full text-gray-300 hover:text-orange-400' />
-                            </button>
-                        </li>
+                                </div>
+                                <div className={`item w-full m-2.5 ${checkValue[todo._id] ? 'line-through' : ''}`}>
+                                    {todo.task}
+                                </div>
+                                <button id='delete' className='block w-8 h-full'>
+                                    <MdDelete className='w-full h-full text-gray-300 hover:text-orange-400' />
+                                </button>
+                            </li>
+                        ))}
                     </ul>
                 </div>
             </div>
         </>
     );
-}
+};
 
 export default HomePage;
