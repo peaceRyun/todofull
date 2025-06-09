@@ -39,3 +39,40 @@ export const useAddTodo = () => {
         },
     });
 };
+
+export const useUpdateTodo = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ id, task, isComplete }: { id: string; task?: string; isComplete?: boolean }) => {
+            const response = await axios.put(`http://localhost:5000/api/tasks/${id}`, {
+                task,
+                isComplete,
+            });
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['todos'] });
+        },
+        onError: (error: any) => {
+            console.log('에러남:', error.message);
+        },
+    });
+};
+
+export const useDeleteTodo = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async (id: string) => {
+            const response = await axios.delete(`http://localhost:5000/api/tasks/${id}`);
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['todos'] });
+        },
+        onError: (error: any) => {
+            console.log('에러남:', error.message);
+        },
+    });
+};

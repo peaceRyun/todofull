@@ -3,7 +3,7 @@ import { IoIosAddCircle } from 'react-icons/io';
 import { MdDelete } from 'react-icons/md';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { formatMonthDayYear, type FormattedDate } from '../utils/dateFormatter';
-import { useAddTodo, useTodoList } from '../api/api';
+import { useAddTodo, useDeleteTodo, useTodoList } from '../api/api';
 
 const wrap = 'h-screen bg-[linear-gradient(to_right,#11998e,#38ef7d)] relative';
 
@@ -13,6 +13,7 @@ const ItemWrap =
 const HomePage = () => {
     const { data, isLoading } = useTodoList();
     const addTodoMutation = useAddTodo();
+    const deleteTodoMutation = useDeleteTodo();
 
     const [textValue, setTextValue] = useState<string>('');
     const [checkValue, setCheckValue] = useState<{ [id: string]: boolean }>({});
@@ -36,6 +37,10 @@ const HomePage = () => {
             ...prev,
             [id]: !prev[id],
         }));
+    };
+
+    const handleDelete = (id: string): void => {
+        deleteTodoMutation.mutate(id);
     };
 
     if (isLoading) return <p>로딩 중...</p>;
@@ -94,7 +99,13 @@ const HomePage = () => {
                                 <div className={`item w-full m-2.5 ${checkValue[todo._id] ? 'line-through' : ''}`}>
                                     {todo.task}
                                 </div>
-                                <button id='delete' className='block w-8 h-full'>
+                                <button
+                                    id='delete'
+                                    className='block w-8 h-full'
+                                    onClick={() => {
+                                        handleDelete(todo._id);
+                                    }}
+                                >
                                     <MdDelete className='w-full h-full text-gray-300 hover:text-orange-400' />
                                 </button>
                             </li>
