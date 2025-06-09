@@ -3,7 +3,7 @@ import { IoIosAddCircle } from 'react-icons/io';
 import { MdDelete } from 'react-icons/md';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { formatMonthDayYear, type FormattedDate } from '../utils/dateFormatter';
-import { useAddTodo, useDeleteTodo, useTodoList } from '../api/api';
+import { useAddTodo, useDeleteTodo, useTodoList, useUpdateTodo } from '../api/api';
 
 const wrap = 'h-screen bg-[linear-gradient(to_right,#11998e,#38ef7d)] relative';
 
@@ -13,10 +13,10 @@ const ItemWrap =
 const HomePage = () => {
     const { data, isLoading } = useTodoList();
     const addTodoMutation = useAddTodo();
+    const updateTodoMutation = useUpdateTodo();
     const deleteTodoMutation = useDeleteTodo();
 
     const [textValue, setTextValue] = useState<string>('');
-    const [checkValue, setCheckValue] = useState<{ [id: string]: boolean }>({});
 
     const todayDateFull: FormattedDate = formatMonthDayYear();
     const { year, monthName, day } = todayDateFull;
@@ -32,11 +32,8 @@ const HomePage = () => {
         }
     };
 
-    const handleCheckChange = (id: string): void => {
-        setCheckValue((prev) => ({
-            ...prev,
-            [id]: !prev[id],
-        }));
+    const handleCheckChange = (todoId: string, currentIsComplete: boolean): void => {
+        updateTodoMutation.mutate({ id: todoId, isComplete: !currentIsComplete });
     };
 
     const handleDelete = (id: string): void => {
@@ -84,19 +81,19 @@ const HomePage = () => {
                                     <label htmlFor={`ticked-${todo._id}`} className='cursor-pointer'>
                                         <FaCheckCircle
                                             className={`w-full h-full text-gray-300 hover:text-green-400 ${
-                                                checkValue[todo._id] ? 'text-green-400' : ''
+                                                todo.isComplete ? 'text-green-400' : ''
                                             }`}
                                         />
                                     </label>
                                     <input
                                         type='checkbox'
                                         id={`ticked-${todo._id}`}
-                                        checked={!!checkValue[todo._id]}
-                                        onChange={() => handleCheckChange(todo._id)}
+                                        checked={todo.isComplete}
+                                        onChange={() => handleCheckChange(todo._id, todo.isComplete)}
                                         className='sr-only'
                                     />
                                 </div>
-                                <div className={`item w-full m-2.5 ${checkValue[todo._id] ? 'line-through' : ''}`}>
+                                <div className={`item w-full m-2.5 ${todo.isComplete ? 'line-through' : ''}`}>
                                     {todo.task}
                                 </div>
                                 <button
