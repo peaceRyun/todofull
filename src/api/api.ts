@@ -1,6 +1,6 @@
 import axios from 'axios';
 import type { Todo, TodoResponse } from '../type/type';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 async function getTodos(): Promise<Todo[]> {
     try {
@@ -17,5 +17,25 @@ export const useTodoList = () => {
     return useQuery({
         queryKey: ['todos'],
         queryFn: getTodos,
+    });
+};
+
+export const useAddTodo = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: async ({ task, isComplete = false }: { task: string; isComplete?: boolean }) => {
+            const response = await axios.post('http://localhost:5000/api/tasks', {
+                task,
+                isComplete,
+            });
+            return response.data;
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['todos'] });
+        },
+        onError: (error: any) => {
+            console.log('에러남:', error.message);
+        },
     });
 };

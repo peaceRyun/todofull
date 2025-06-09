@@ -3,7 +3,7 @@ import { IoIosAddCircle } from 'react-icons/io';
 import { MdDelete } from 'react-icons/md';
 import { useState, type ChangeEvent, type FormEvent } from 'react';
 import { formatMonthDayYear, type FormattedDate } from '../utils/dateFormatter';
-import { useTodoList } from '../api/api';
+import { useAddTodo, useTodoList } from '../api/api';
 
 const wrap = 'h-screen bg-[linear-gradient(to_right,#11998e,#38ef7d)] relative';
 
@@ -12,6 +12,7 @@ const ItemWrap =
 
 const HomePage = () => {
     const { data, isLoading } = useTodoList();
+    const addTodoMutation = useAddTodo();
 
     const [textValue, setTextValue] = useState<string>('');
     const [checkValue, setCheckValue] = useState<{ [id: string]: boolean }>({});
@@ -22,9 +23,12 @@ const HomePage = () => {
     const handleTextChange = (e: ChangeEvent<HTMLInputElement>): void => {
         setTextValue(e.target.value);
     };
-    const handleTextSubmit = (e: FormEvent<HTMLFormElement>): void => {
+    const handleTextSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
         e.preventDefault();
-        alert(`${textValue}`);
+        if (textValue.trim()) {
+            addTodoMutation.mutate({ task: textValue });
+            setTextValue('');
+        }
     };
 
     const handleCheckChange = (id: string): void => {
@@ -75,7 +79,7 @@ const HomePage = () => {
                                     <label htmlFor={`ticked-${todo._id}`} className='cursor-pointer'>
                                         <FaCheckCircle
                                             className={`w-full h-full text-gray-300 hover:text-green-400 ${
-                                                checkValue ? 'text-green-400' : ''
+                                                checkValue[todo._id] ? 'text-green-400' : ''
                                             }`}
                                         />
                                     </label>
